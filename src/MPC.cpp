@@ -2,6 +2,7 @@
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include "Eigen-3.3/Eigen/Core"
+#include <math.h>
 
 using CppAD::AD;
 
@@ -41,6 +42,130 @@ class FG_eval {
 //
 MPC::MPC() {}
 MPC::~MPC() {}
+
+vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_, double px_, double py_, double psi_) {
+  ptsx = ptsx_;
+  ptsy = ptsy_;
+
+  Eigen::VectorXd ptsx2(6);
+  Eigen::VectorXd ptsy2(6);
+
+  ptsx2 << ptsx[0], ptsx[1], ptsx[2], ptsx[3], ptsx[4], ptsx[5];  
+  ptsy2 << ptsy[0], ptsy[1], ptsy[2], ptsy[3], ptsy[4], ptsy[5];  
+
+  coeffs = polyfit(ptsx2, ptsy2, 5);
+  cout << "coeffs " << coeffs << endl; 
+
+  px = px_;
+  py = py_;
+  psi = psi_;
+
+
+  cout << "ptsx:\t\t";
+  for (int i = 0; i < 6; i++) {
+    cout << ptsx[i] << "\t";
+  }
+  cout << endl;
+
+  cout << "ptsy:\t\t";
+  for (int i = 0; i < 6; i++) {
+    cout << ptsy[i] << "\t";
+  }
+  cout << endl;
+
+  cout << "----------------------------------------------" << endl;
+
+  vector<double> res = {0, 0.5};
+
+  return res;
+}
+
+vector<double> MPC::getPredictedX() {
+  vector<double> prx = {1,2,3,4,5,6,7};
+  return prx;
+}
+
+vector<double> MPC::getPredictedY() {
+  vector<double> pry = {0,0,0,0,0,0,0};
+  return pry;
+}
+
+vector<double> MPC::getTrajectoryCarCoordsX() {
+  cout << "traX\t\t";
+  vector<double> traX;
+  vector<double> xLine = getTrajectoryX();
+  for (int i = 0; i < xLine.size(); i++) {
+    double carX = (xLine[i] - px) * cos(psi);
+    traX.push_back(carX);
+    cout << carX << "\t";     
+  }
+  cout << endl;  
+  return traX;
+}
+
+vector<double> MPC::getTrajectoryCarCoordsY() {
+  cout << "traY\t\t";
+  vector<double> traY;
+  vector<double> yLine = getTrajectoryY();
+  for (int i = 0; i < yLine.size(); i++) {
+    double carY = (yLine[i] - py) * sin(psi);
+    traY.push_back(carY);
+    cout << carY << "\t";    
+  }
+  cout << endl;  
+  return traY;
+}
+
+vector<double> MPC::getTrajectoryX() {
+  vector<double> r;
+  for (int i = 0; i < 30; i++) {
+    r.push_back(px - i);
+  }
+  return r;
+}
+
+vector<double> MPC::getTrajectoryY() {
+  vector<double> traY;
+  vector<double> xList = getTrajectoryX();
+  for (int i = 0; i < xList.size(); i ++) {
+    double carY = polyeval(coeffs, xList[i]);
+    traY.push_back(carY);
+  }
+  return traY;
+}
+
+// Evaluate a polynomial.
+double MPC::polyeval(Eigen::VectorXd coeffs, double x) {
+  double result = 0.0;
+  for (int i = 0; i < coeffs.size(); i++) {
+    result += coeffs[i] * pow(x, i);
+  }
+  return result;
+}
+
+// Fit a polynomial.
+// Adapted from
+// https://github.com/JuliaMath/Polynomials.jl/blob/master/src/Polynomials.jl#L676-L716
+Eigen::VectorXd MPC::polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
+                        int order) {
+  assert(xvals.size() == yvals.size());
+  assert(order >= 1 && order <= xvals.size() - 1);
+  Eigen::MatrixXd A(xvals.size(), order + 1);
+
+  for (int i = 0; i < xvals.size(); i++) {
+    A(i, 0) = 1.0;
+  }
+
+  for (int j = 0; j < xvals.size(); j++) {
+    for (int i = 0; i < order; i++) {
+      A(j, i + 1) = A(j, i) * xvals(j);
+    }
+  }
+
+  auto Q = A.householderQr();
+  auto result = Q.solve(yvals);
+  return result;
+}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   bool ok = true;

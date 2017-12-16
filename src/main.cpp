@@ -77,7 +77,7 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    cout << sdata << endl;
+    // cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -92,14 +92,25 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
 
+
+          // std::cout << "px\t\t" << px << std::endl;
+          // std::cout << "py\t\t" << py << std::endl;
+          // std::cout << "psi\t\t" << psi << std::endl;
+          // std::cout << "v\t\t" << v << std::endl;
+          // cout << "ptsx\t\t" << ptsx << endl;
+          // cout << "j\t\t" << j << endl;
+
           /*
           * TODO: Calculate steering angle and throttle using MPC.
           *
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+
+          vector<double> res = mpc.getSteerThrottle(ptsx, ptsy, px, py, psi);
+
+          double steer_value = res[0];
+          double throttle_value = res[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -108,8 +119,8 @@ int main() {
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
-          vector<double> mpc_x_vals;
-          vector<double> mpc_y_vals;
+          vector<double> mpc_x_vals = mpc.getPredictedX();
+          vector<double> mpc_y_vals = mpc.getPredictedY();
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
@@ -118,8 +129,8 @@ int main() {
           msgJson["mpc_y"] = mpc_y_vals;
 
           //Display the waypoints/reference line
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
+          vector<double> next_x_vals = mpc.getTrajectoryCarCoordsX();
+          vector<double> next_y_vals = mpc.getTrajectoryCarCoordsY();
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
@@ -129,7 +140,7 @@ int main() {
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          //std::cout << msg << std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
