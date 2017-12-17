@@ -18,6 +18,7 @@ class MPC {
   double psi;
   double dpsi;
   double v;
+  double steering;
   std::vector<double> ptsx;
   std::vector<double> ptsy;
   Eigen::VectorXd coeffs;

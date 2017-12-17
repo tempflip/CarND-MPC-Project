@@ -73,14 +73,16 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   cout << endl;
   */
 
-  double bestPsi = getBestDPsi();
-  buildGreen(bestPsi);
+  steering = getBestDPsi();
 
 
-  double steering = (bestPsi - M_PI/2) / M_PI/2;
-  //double steering = bestPsi;
+  //double steering = (bestPsi - M_PI/2) / M_PI/2;
+  
+
+  buildGreen(psi);
+
+  cout << "////// psi \t\t" << psi << endl;
   cout << "////// dPsi \t\t" << dpsi << endl;
-  cout << "bestPsi \t\t" << bestPsi << endl;
   cout << "steering \t\t" << steering << endl;
 
   vector<double> res = {steering, 0.3};
@@ -118,9 +120,9 @@ void MPC::buildGreen(double psi) {
   greenX.clear();
   greenY.clear();
 
-  for (int i = 0; i < 30; i++) {
+  for (int i = 0; i < 10; i++) {
     greenX.push_back(i);
-    vector<double> stateAtDt = getStateAtDt(0, 0, psi, dpsi, v, i);
+    vector<double> stateAtDt = getStateAtDt(0, 0, psi, steering, v, i);
     greenY.push_back(stateAtDt[1]);
   }
 
@@ -129,10 +131,9 @@ void MPC::buildGreen(double psi) {
 vector<double> MPC::getStateAtDt(double x_, double y_, double psi_, double dpsi_, double v__, double dt) {
 
   double v_;
+  psi_ = M_PI / 2;
   if (isnan(v__) || v__ == 0) v_ = 1;
   else v_ = v__;
-
-  cout << "############### v_" << v_ << endl;
 
   double psiNew = psi_ + Lf/v_ * dpsi_ * dt;
 
@@ -154,7 +155,7 @@ vector<double> MPC::getStateAtDt(double x_, double y_, double psi_, double dpsi_
 double MPC::getError(double psi_, double dpsi_) {
   double error = 0;
 
-  for (int dt = 0; dt < 30; dt++) {
+  for (int dt = 0; dt < 5; dt++) {
     vector<double> state = getStateAtDt(0, 0, psi_, dpsi_, v, dt);
 
     double x_mpc = state[0];
@@ -167,27 +168,33 @@ double MPC::getError(double psi_, double dpsi_) {
 }
 
 double MPC::getBestDPsi() {
-  double dpsi_ = dpsi;
 
   double bestPsi;
   double bestDPsi;
   double bestError = 9999999;
-  for (int i = 1; i < 10; i ++) {
 
-      double degree = M_PI / i;
-      double error = getError(degree, dpsi_);
+  double thisDpsi = 0;
+  for (double thisDpsi = -1; thisDpsi < 1; thisDpsi += 0.1) {
+  //  for (int i = 1; i < 10; i ++) {
 
-      if (error < bestError) {
-        bestError = error;
-        bestPsi = degree;
-        cout << "Best error: \t\t" << degree << "\t" << error << endl;
-    }
+        //double degree = M_PI / i;
+        double error = getError(psi, thisDpsi);
+
+        cout << "error: \t\t" << thisDpsi << "\t" << error << endl;
+  
+
+        if (error < bestError) {
+          bestError = error;
+          //bestPsi = degree;
+          bestDPsi = thisDpsi;
+          cout << "Best error: \t\t" << thisDpsi << "\t" << error << endl;
+      }
+  //  }
   }
 
+  vector<double> state = getStateAtDt(0, 0, psi, bestDPsi, v, 1);
 
-  vector<double> state = getStateAtDt(0, 0, bestPsi, dpsi_, v, 1);
-
-  return state[3];
+  return state[4];
 }
 
 vector<double> MPC::getYellowX() {
