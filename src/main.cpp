@@ -119,8 +119,8 @@ int main() {
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
-          vector<double> mpc_x_vals = mpc.getPredictedX();
-          vector<double> mpc_y_vals = mpc.getPredictedY();
+          vector<double> mpc_x_vals;// = mpc.getPredictedX();
+          vector<double> mpc_y_vals;// = mpc.getPredictedY();
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
@@ -140,7 +140,7 @@ int main() {
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          //std::cout << msg << std::endl;
+          std::cout << msg << std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.

@@ -47,19 +47,31 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   ptsx = ptsx_;
   ptsy = ptsy_;
 
-  Eigen::VectorXd ptsx2(6);
-  Eigen::VectorXd ptsy2(6);
-
-  ptsx2 << ptsx[0], ptsx[1], ptsx[2], ptsx[3], ptsx[4], ptsx[5];  
-  ptsy2 << ptsy[0], ptsy[1], ptsy[2], ptsy[3], ptsy[4], ptsy[5];  
-
-  coeffs = polyfit(ptsx2, ptsy2, 5);
-  cout << "coeffs " << coeffs << endl; 
-
   px = px_;
   py = py_;
   psi = psi_;
 
+  Eigen::VectorXd ptsx2(6);
+  Eigen::VectorXd ptsy2(6);
+
+  for (int i = 0; i < 6; i++) {
+    ptsx2[i] = (ptsx[i] - px) * cos(psi);
+    ptsy2[i] = (ptsy[i] - py) * sin(psi);
+  }
+
+  // ptsx2[0] = ptsx[0]-px; 
+    //<< ptsx[1]-px, ptsx[2]-px, ptsx[3]-px, ptsx[4]-px, ptsx[5]-px;  
+  
+  // ptsy2 << ptsy[0]-py, ptsy[1]-py, ptsy[2]-py, ptsy[3]-py, ptsy[4]-py, ptsy[5]-py;  
+
+  coeffs = polyfit(ptsx2, ptsy2, 3);
+  
+  cout << "coeffs " << coeffs << endl; 
+
+
+
+  cout << "PX \t\t" << px << endl;
+  cout << "PY \t\t" << py << endl;
 
   cout << "ptsx:\t\t";
   for (int i = 0; i < 6; i++) {
@@ -75,22 +87,30 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
 
   cout << "----------------------------------------------" << endl;
 
-  vector<double> res = {0, 0.5};
+  vector<double> res = {0, 0.3};
 
   return res;
 }
 
 vector<double> MPC::getPredictedX() {
-  vector<double> prx = {1,2,3,4,5,6,7};
-  return prx;
+  // vector<double> prx = {1,2,3,4,5,6,7};
+  // return prx;
 }
 
 vector<double> MPC::getPredictedY() {
-  vector<double> pry = {0,0,0,0,0,0,0};
-  return pry;
+  // vector<double> pry = {0,0,0,0,0,0,0};
+  // return pry;
 }
 
 vector<double> MPC::getTrajectoryCarCoordsX() {
+  vector<double> xList;
+  for (int i = 0; i < 6; i ++) {
+    xList.push_back((ptsx[i] - px) * cos(psi));
+  }
+  return xList;
+
+
+  /*
   cout << "traX\t\t";
   vector<double> traX;
   vector<double> xLine = getTrajectoryX();
@@ -101,9 +121,25 @@ vector<double> MPC::getTrajectoryCarCoordsX() {
   }
   cout << endl;  
   return traX;
+  */
 }
 
 vector<double> MPC::getTrajectoryCarCoordsY() {
+
+  std::vector<double> xList = getTrajectoryCarCoordsX();
+  std::vector<double> yList;
+
+  // vector<double> pry = {0,0,0,0,0,0,0};
+
+
+  for (int i=0; i < xList.size(); i++) {
+    double yVal = polyeval(coeffs, xList[i]);
+    // cout << "yVal" << yVal << endl;
+    yList.push_back(yVal);
+  }
+  return yList;
+
+
   cout << "traY\t\t";
   vector<double> traY;
   vector<double> yLine = getTrajectoryY();
@@ -118,8 +154,8 @@ vector<double> MPC::getTrajectoryCarCoordsY() {
 
 vector<double> MPC::getTrajectoryX() {
   vector<double> r;
-  for (int i = 0; i < 30; i++) {
-    r.push_back(px - i);
+  for (int i = 0; i < 6; i++) {
+    r.push_back(ptsx[i] - px);
   }
   return r;
 }
