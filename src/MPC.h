@@ -52,7 +52,7 @@ class MPC {
 
   double getError(double psi_, double dpsi_);
 
-  double getBestPsi();
+  double getBestDPsi();
 };
 
 #endif /* MPC_H */

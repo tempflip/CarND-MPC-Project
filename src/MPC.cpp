@@ -50,6 +50,7 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   px = px_;
   py = py_;
   psi = psi_;
+  dpsi = dpsi_;
   v = v_;
 
   buildYellow();
@@ -72,11 +73,13 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   cout << endl;
   */
 
-  double bestPsi = getBestPsi();
+  double bestPsi = getBestDPsi();
   buildGreen(bestPsi);
 
 
   double steering = (bestPsi - M_PI/2) / M_PI/2;
+  //double steering = bestPsi;
+  cout << "////// dPsi \t\t" << dpsi << endl;
   cout << "bestPsi \t\t" << bestPsi << endl;
   cout << "steering \t\t" << steering << endl;
 
@@ -117,13 +120,19 @@ void MPC::buildGreen(double psi) {
 
   for (int i = 0; i < 30; i++) {
     greenX.push_back(i);
-    vector<double> stateAtDt = getStateAtDt(0, 0, psi, -0.01, 1, i);
+    vector<double> stateAtDt = getStateAtDt(0, 0, psi, dpsi, v, i);
     greenY.push_back(stateAtDt[1]);
   }
 
 }
 
-vector<double> MPC::getStateAtDt(double x_, double y_, double psi_, double dpsi_, double v_, double dt) {
+vector<double> MPC::getStateAtDt(double x_, double y_, double psi_, double dpsi_, double v__, double dt) {
+
+  double v_;
+  if (isnan(v__) || v__ == 0) v_ = 1;
+  else v_ = v__;
+
+  cout << "############### v_" << v_ << endl;
 
   double psiNew = psi_ + Lf/v_ * dpsi_ * dt;
 
@@ -136,6 +145,7 @@ vector<double> MPC::getStateAtDt(double x_, double y_, double psi_, double dpsi_
   res.push_back(yNew);
   res.push_back(psi_);
   res.push_back(psiNew);
+  res.push_back(dpsi_);  
   res.push_back(vNew);
 
   return res;
@@ -145,7 +155,7 @@ double MPC::getError(double psi_, double dpsi_) {
   double error = 0;
 
   for (int dt = 0; dt < 30; dt++) {
-    vector<double> state = getStateAtDt(0, 0, psi_, dpsi_, 1, dt);
+    vector<double> state = getStateAtDt(0, 0, psi_, dpsi_, v, dt);
 
     double x_mpc = state[0];
     double y_mpc = state[1];
@@ -156,8 +166,8 @@ double MPC::getError(double psi_, double dpsi_) {
   return error;
 }
 
-double MPC::getBestPsi() {
-  double dpsi_ = -0.005;
+double MPC::getBestDPsi() {
+  double dpsi_ = dpsi;
 
   double bestPsi;
   double bestDPsi;
@@ -175,13 +185,7 @@ double MPC::getBestPsi() {
   }
 
 
-  // cout << "######### \t" << getStateAtDt(0, 0, bestPsi, dpsi_, 1, 0)[3];
-  // cout << "######### \t" << getStateAtDt(0, 0, bestPsi, dpsi_, 1, 1)[3];
-  // cout << "######### \t" << getStateAtDt(0, 0, bestPsi, dpsi_, 1, 2)[3];
-  // cout << "######### \t" << getStateAtDt(0, 0, bestPsi, dpsi_, 1, 3)[3];
-  // cout << "######### \t" << getStateAtDt(0, 0, bestPsi, dpsi_, 1, 4)[3];
-
-  vector<double> state = getStateAtDt(0, 0, bestPsi, dpsi_, 1, 1);
+  vector<double> state = getStateAtDt(0, 0, bestPsi, dpsi_, v, 1);
 
   return state[3];
 }
