@@ -16,6 +16,7 @@ class MPC {
   double px;
   double py;
   double psi;
+  double dpsi;
   double v;
   std::vector<double> ptsx;
   std::vector<double> ptsy;
@@ -29,7 +30,7 @@ class MPC {
   // Return the first actuatotions.
   vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
 
-  vector<double> getSteerThrottle(vector<double> ptsx, vector<double> ptsy, double px, double py, double psi, double v);
+  vector<double> getSteerThrottle(vector<double> ptsx, vector<double> ptsy, double px, double py, double psi, double dPsi, double v);
 
   vector<double> getYellowX();
 
@@ -39,7 +40,7 @@ class MPC {
 
   vector<double> getGreenY();
 
-  vector<double> getStateAtDt(double x_, double y_, double psi_, double v_, double dt);
+  vector<double> getStateAtDt(double x_, double y_, double psi_, double dpsi_, double v_, double dt);
 
   void buildYellow();
 
@@ -49,7 +50,7 @@ class MPC {
 
   Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order);
 
-  double getError(double psi_);
+  double getError(double psi_, double dpsi_);
 
   double getBestPsi();
 };

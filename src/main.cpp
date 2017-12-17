@@ -91,6 +91,7 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double dPsi = j[1]["steering_angle"];
 
 
           // std::cout << "px\t\t" << px << std::endl;
@@ -98,7 +99,7 @@ int main() {
           // std::cout << "psi\t\t" << psi << std::endl;
           // std::cout << "v\t\t" << v << std::endl;
           // cout << "ptsx\t\t" << ptsx << endl;
-          // cout << "j\t\t" << j << endl;
+          cout << "j\t\t" << j << endl;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -107,7 +108,7 @@ int main() {
           *
           */
 
-          vector<double> res = mpc.getSteerThrottle(ptsx, ptsy, px, py, psi, v);
+          vector<double> res = mpc.getSteerThrottle(ptsx, ptsy, px, py, psi, dPsi, v);
 
           double steer_value = res[0];
           double throttle_value = res[1];
