@@ -73,19 +73,17 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   cout << endl;
   */
 
-  steering = getBestDPsi();
-
-
-  //double steering = (bestPsi - M_PI/2) / M_PI/2;
+  vector<double> r = getBestDPsiAndThrottle();
+  steering = r[0];
+  double throttle = r[1];
   
-
   buildGreen(psi);
 
   cout << "////// psi \t\t" << psi << endl;
   cout << "////// dPsi \t\t" << dpsi << endl;
   cout << "steering \t\t" << steering << endl;
 
-  vector<double> res = {steering, 0.3};
+  vector<double> res = {steering, throttle};
 
   cout << "----------------------------------------------" << endl;
 
@@ -167,7 +165,7 @@ double MPC::getError(double psi_, double dpsi_) {
   return error;
 }
 
-double MPC::getBestDPsi() {
+vector<double> MPC::getBestDPsiAndThrottle() {
 
   double bestPsi;
   double bestDPsi;
@@ -193,8 +191,10 @@ double MPC::getBestDPsi() {
   }
 
   vector<double> state = getStateAtDt(0, 0, psi, bestDPsi, v, 1);
-
-  return state[4];
+  vector<double> res;
+  res.push_back(state[4]);
+  res.push_back(0.3);
+  return res;
 }
 
 vector<double> MPC::getYellowX() {

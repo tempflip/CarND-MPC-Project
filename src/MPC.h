@@ -53,7 +53,7 @@ class MPC {
 
   double getError(double psi_, double dpsi_);
 
-  double getBestDPsi();
+  vector<double> getBestDPsiAndThrottle();
 };
 
 #endif /* MPC_H */
