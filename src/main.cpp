@@ -129,8 +129,8 @@ int main() {
           msgJson["mpc_y"] = mpc_y_vals;
 
           //Display the waypoints/reference line
-          vector<double> next_x_vals = mpc.getTrajectoryCarCoordsX();
-          vector<double> next_y_vals = mpc.getTrajectoryCarCoordsY();
+          vector<double> next_x_vals = mpc.getYellowX();
+          vector<double> next_y_vals = mpc.getYellowY();
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line

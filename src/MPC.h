@@ -19,6 +19,9 @@ class MPC {
   std::vector<double> ptsx;
   std::vector<double> ptsy;
   Eigen::VectorXd coeffs;
+  std::vector<double> yellowX;
+  std::vector<double> yellowY;
+
 
   // Solve the model given an initial state and polynomial coefficients.
   // Return the first actuatotions.
@@ -26,17 +29,11 @@ class MPC {
 
   vector<double> getSteerThrottle(vector<double> ptsx, vector<double> ptsy, double px, double py, double psi);
 
-  vector<double> getPredictedX();
+  vector<double> getYellowX();
 
-  vector<double> getPredictedY();
+  vector<double> getYellowY();
 
-  vector<double> getTrajectoryX();
-  
-  vector<double> getTrajectoryY();
-
-  vector<double> getTrajectoryCarCoordsX();
-
-  vector<double> getTrajectoryCarCoordsY();
+  void buildYellow();
 
   double polyeval(Eigen::VectorXd coeffs, double x);
 

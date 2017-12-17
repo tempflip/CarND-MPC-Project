@@ -51,27 +51,11 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   py = py_;
   psi = psi_;
 
-  Eigen::VectorXd ptsx2(6);
-  Eigen::VectorXd ptsy2(6);
-
-  for (int i = 0; i < 6; i++) {
-    ptsx2[i] = (ptsx[i] - px) * cos(psi);
-    ptsy2[i] = (ptsy[i] - py) * sin(psi);
-  }
-
-  // ptsx2[0] = ptsx[0]-px; 
-    //<< ptsx[1]-px, ptsx[2]-px, ptsx[3]-px, ptsx[4]-px, ptsx[5]-px;  
-  
-  // ptsy2 << ptsy[0]-py, ptsy[1]-py, ptsy[2]-py, ptsy[3]-py, ptsy[4]-py, ptsy[5]-py;  
-
-  coeffs = polyfit(ptsx2, ptsy2, 3);
-  
-  cout << "coeffs " << coeffs << endl; 
-
-
+  buildYellow();
 
   cout << "PX \t\t" << px << endl;
   cout << "PY \t\t" << py << endl;
+  cout << "PSI \t\t" << psi << endl;
 
   cout << "ptsx:\t\t";
   for (int i = 0; i < 6; i++) {
@@ -92,82 +76,36 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   return res;
 }
 
-vector<double> MPC::getPredictedX() {
-  // vector<double> prx = {1,2,3,4,5,6,7};
-  // return prx;
-}
+void MPC::buildYellow() {
+  Eigen::VectorXd ptsy2(6);
+  Eigen::VectorXd ptsx2(6);
 
-vector<double> MPC::getPredictedY() {
-  // vector<double> pry = {0,0,0,0,0,0,0};
-  // return pry;
-}
-
-vector<double> MPC::getTrajectoryCarCoordsX() {
-  vector<double> xList;
-  for (int i = 0; i < 6; i ++) {
-    xList.push_back((ptsx[i] - px) * cos(psi));
-  }
-  return xList;
-
-
-  /*
-  cout << "traX\t\t";
-  vector<double> traX;
-  vector<double> xLine = getTrajectoryX();
-  for (int i = 0; i < xLine.size(); i++) {
-    double carX = (xLine[i] - px) * cos(psi);
-    traX.push_back(carX);
-    cout << carX << "\t";     
-  }
-  cout << endl;  
-  return traX;
-  */
-}
-
-vector<double> MPC::getTrajectoryCarCoordsY() {
-
-  std::vector<double> xList = getTrajectoryCarCoordsX();
-  std::vector<double> yList;
-
-  // vector<double> pry = {0,0,0,0,0,0,0};
-
-
-  for (int i=0; i < xList.size(); i++) {
-    double yVal = polyeval(coeffs, xList[i]);
-    // cout << "yVal" << yVal << endl;
-    yList.push_back(yVal);
-  }
-  return yList;
-
-
-  cout << "traY\t\t";
-  vector<double> traY;
-  vector<double> yLine = getTrajectoryY();
-  for (int i = 0; i < yLine.size(); i++) {
-    double carY = (yLine[i] - py) * sin(psi);
-    traY.push_back(carY);
-    cout << carY << "\t";    
-  }
-  cout << endl;  
-  return traY;
-}
-
-vector<double> MPC::getTrajectoryX() {
-  vector<double> r;
   for (int i = 0; i < 6; i++) {
-    r.push_back(ptsx[i] - px);
+    double x = ptsx[i] - px;
+    double y = ptsy[i] - py;
+    ptsx2[i] = x * cos(-psi) - y * sin(-psi);
+    ptsy2[i] = x * sin(-psi) + y * cos(-psi);
   }
-  return r;
+
+  coeffs = polyfit(ptsx2, ptsy2, 3);
+  cout << "coeffs " << coeffs << endl; 
+
+  yellowX.clear();
+  yellowY.clear();
+
+  for (int i = 0; i < 100; i++) {
+    yellowX.push_back(i);
+    yellowY.push_back(polyeval(coeffs, i));
+  }
 }
 
-vector<double> MPC::getTrajectoryY() {
-  vector<double> traY;
-  vector<double> xList = getTrajectoryX();
-  for (int i = 0; i < xList.size(); i ++) {
-    double carY = polyeval(coeffs, xList[i]);
-    traY.push_back(carY);
-  }
-  return traY;
+
+vector<double> MPC::getYellowX() {
+  return yellowX;
+}
+
+vector<double> MPC::getYellowY() {
+  return yellowY;
 }
 
 // Evaluate a polynomial.
