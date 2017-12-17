@@ -43,13 +43,14 @@ class FG_eval {
 MPC::MPC() {}
 MPC::~MPC() {}
 
-vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_, double px_, double py_, double psi_) {
+vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_, double px_, double py_, double psi_, double v_) {
   ptsx = ptsx_;
   ptsy = ptsy_;
 
   px = px_;
   py = py_;
   psi = psi_;
+  v = v_;
 
   buildYellow();
 
@@ -69,9 +70,18 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   }
   cout << endl;
 
-  cout << "----------------------------------------------" << endl;
 
-  vector<double> res = {0, 0.3};
+  double bestPsi = getBestPsi();
+  buildGreen(bestPsi);
+
+
+  double steering = (bestPsi - M_PI/2) / M_PI/2;
+  cout << "bestPsi \t\t" << bestPsi << endl;
+  cout << "steering \t\t" << steering << endl;
+
+  vector<double> res = {steering, 0.1};
+
+  cout << "----------------------------------------------" << endl;
 
   return res;
 }
@@ -99,6 +109,65 @@ void MPC::buildYellow() {
   }
 }
 
+void MPC::buildGreen(double psi) {
+
+  greenX.clear();
+  greenY.clear();
+
+  for (int i = 0; i < 30; i++) {
+    greenX.push_back(i);
+    vector<double> stateAtDt = getStateAtDt(0, 0, psi, 1, i);
+    greenY.push_back(stateAtDt[1]);
+  }
+
+}
+
+vector<double> MPC::getStateAtDt(double x_, double y_, double psi_, double v_, double dt) {
+
+  double xNew = x_ + dt * v_ * cos(psi_);
+  double yNew = y_ + dt * v_ * cos(psi_);
+  double psiNew = psi_;
+  double vNew = v_;
+
+  vector<double> res;
+  res.push_back(xNew);
+  res.push_back(yNew);
+  res.push_back(psiNew);
+  res.push_back(vNew);
+
+  return res;
+}
+
+double MPC::getError(double psi_) {
+  double error = 0;
+  for (int dt = 0; dt < 30; dt++) {
+    vector<double> state = getStateAtDt(0, 0, psi_, 1, dt);
+
+    double x_mpc = state[0];
+    double y_mpc = state[1];
+
+    double y_tra = polyeval(coeffs, x_mpc);
+    error += (y_mpc - y_tra) * (y_mpc - y_tra);
+  }
+  return error;
+}
+
+double MPC::getBestPsi() {
+  double bestPsi;
+  double bestError = 9999999;
+  for (int i = 1; i < 30; i ++) {
+    double degree = M_PI / i;
+    double error = getError(degree);
+    cout << "error\t" << degree << "\t\t" << error << endl;
+
+    if (error < bestError) {
+      bestError = error;
+      bestPsi = degree;
+      cout << "YAAAAAY" << endl;
+    }
+  }
+  return bestPsi;
+}
 
 vector<double> MPC::getYellowX() {
   return yellowX;
@@ -106,6 +175,14 @@ vector<double> MPC::getYellowX() {
 
 vector<double> MPC::getYellowY() {
   return yellowY;
+}
+
+vector<double> MPC::getGreenX() {
+  return greenX;
+}
+
+vector<double> MPC::getGreenY() {
+  return greenY;
 }
 
 // Evaluate a polynomial.
