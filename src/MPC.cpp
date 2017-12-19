@@ -9,7 +9,6 @@ using CppAD::AD;
 // TODO: Set the timestep length and duration
 size_t N = 0;
 double dt = 0;
-
 // This value assumes the model presented in the classroom is used.
 //
 // It was obtained by measuring the radius formed by running the vehicle in the
@@ -21,6 +20,9 @@ double dt = 0;
 //
 // This is the length from front to CoG that has a similar radius.
 const double Lf = 2.67;
+
+const int HORIZON = 5;
+const int GREENHORIZON = 15;
 
 class FG_eval {
  public:
@@ -74,14 +76,16 @@ vector<double> MPC::getSteerThrottle(vector<double> ptsx_, vector<double> ptsy_,
   */
 
   vector<double> r = getBestDPsiAndThrottle();
-  steering = r[0];
+  steering = r[0] * 3;
   double throttle = r[1];
   
   buildGreen(psi);
 
   cout << "////// psi \t\t" << psi << endl;
   cout << "////// dPsi \t\t" << dpsi << endl;
+  cout << "////// v \t\t" << v << endl;
   cout << "steering \t\t" << steering << endl;
+  cout << "throttle \t\t" << throttle << endl;
 
   vector<double> res = {steering, throttle};
 
@@ -118,7 +122,7 @@ void MPC::buildGreen(double psi) {
   greenX.clear();
   greenY.clear();
 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < GREENHORIZON; i++) {
     greenX.push_back(i);
     vector<double> stateAtDt = getStateAtDt(0, 0, psi, steering, v, i);
     greenY.push_back(stateAtDt[1]);
@@ -153,7 +157,7 @@ vector<double> MPC::getStateAtDt(double x_, double y_, double psi_, double dpsi_
 double MPC::getError(double psi_, double dpsi_) {
   double error = 0;
 
-  for (int dt = 0; dt < 5; dt++) {
+  for (int dt = 0; dt < HORIZON; dt++) {
     vector<double> state = getStateAtDt(0, 0, psi_, dpsi_, v, dt);
 
     double x_mpc = state[0];
@@ -172,28 +176,33 @@ vector<double> MPC::getBestDPsiAndThrottle() {
   double bestError = 9999999;
 
   double thisDpsi = 0;
-  for (double thisDpsi = -1; thisDpsi < 1; thisDpsi += 0.1) {
+  for (double thisDpsi = -0.1; thisDpsi < 0.1; thisDpsi += 0.0001) {
   //  for (int i = 1; i < 10; i ++) {
 
         //double degree = M_PI / i;
         double error = getError(psi, thisDpsi);
 
-        cout << "error: \t\t" << thisDpsi << "\t" << error << endl;
+        // cout << "error: \t\t" << thisDpsi << "\t" << error << endl;
   
 
         if (error < bestError) {
           bestError = error;
           //bestPsi = degree;
           bestDPsi = thisDpsi;
-          cout << "Best error: \t\t" << thisDpsi << "\t" << error << endl;
+          // cout << "Best error: \t\t" << thisDpsi << "\t" << error << endl;
       }
   //  }
   }
 
   vector<double> state = getStateAtDt(0, 0, psi, bestDPsi, v, 1);
   vector<double> res;
+  cout << "bestError \t" << bestError << endl;
+
+  double throttle = 0.3;
+  if (bestError > 1) throttle = 0;
+
   res.push_back(state[4]);
-  res.push_back(0.3);
+  res.push_back(throttle);
   return res;
 }
 
