@@ -94,12 +94,7 @@ int main() {
           double dPsi = j[1]["steering_angle"];
 
 
-          // std::cout << "px\t\t" << px << std::endl;
-          // std::cout << "py\t\t" << py << std::endl;
-          // std::cout << "psi\t\t" << psi << std::endl;
-          // std::cout << "v\t\t" << v << std::endl;
-          // cout << "ptsx\t\t" << ptsx << endl;
-          cout << "j\t\t" << j << endl;
+          //cout << "j\t\t" << j << endl;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.

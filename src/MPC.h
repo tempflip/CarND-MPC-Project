@@ -26,6 +26,7 @@ class MPC {
   std::vector<double> yellowY;
   std::vector<double> greenX;
   std::vector<double> greenY;
+  int step;
 
   // Solve the model given an initial state and polynomial coefficients.
   // Return the first actuatotions.
